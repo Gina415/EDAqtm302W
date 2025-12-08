@@ -44,7 +44,7 @@ adult_selected <- data %>%
   filter(AGEP_A >= 25, AGEP_A <= 55) %>%
   select(AGEP_A, all_of(vars))
 
-out_path <- "adult_selected_selected.csv"
+out_path <- "adult_selected.csv"
 write.csv(adult_selected, out_path, row.names = FALSE)
 
 #Generate a new csv file containing only those variables 
