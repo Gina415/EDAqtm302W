@@ -1,0 +1,484 @@
+---
+title: "EDA Project Code Notebook"
+author: "Gina Ge & Christina Fu"
+date: "2025-10-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction:
+
+This project uses a subset of the 2024 National Health Interview Survey adult questionnaire to explore the relationship between sleep quality and mental health among U.S. adults. The NHIS is a survey conducted annually by the National Center for Health Statistics. From the dataset, we extracted data on sleep quality and mental-health diagnoses and recent care on anxiety, depression, and psychological distress. The motivation for the project is that sleep issues and mental health problems are becoming more widespread and normal common among adults and even teenagers. These issues could severely affect people's lives. Therefore, understanding how sleep quality correlates with mental health problems might help adults have healthier lives and better efficiency on work.
+
+```{r}
+library(tidyverse)
+```
+We're downloading the tidyverse package which contains packages such as dplyr and stringr which will allow us to rearrange and manipulate the data into a more easily understandable format, and ggplot2 which will provide us with the tools to visualize our variables-of-interest.
+
+```{r}
+#load the original dataset
+data<- read.csv("adult24.csv")
+dim(data)
+```
+
+```{r}
+#Extract the 22 variable columns 
+vars <- c(
+  "ANXEV_A","DEPEV_A",
+  "MHRX_A","MHTHRPY_A","MHTPYNOW_A",
+  "SAD_A","NERVOUS_A","RESTLESS_A","HOPELESS_A","EFFORT_A","WORTHLESS_A",
+  "FGEFRQTRD_A", 
+  "SLPHOURS_A","SLPREST_A","SLPFLL_A","SLPSTY_A",
+  "SLPMED1_A","SLPMED2_A","SLPMED3_A"
+)
+id_like <- c("SEQN","RespondentID","ID")
+vars <- unique(c(intersect(id_like, names(data)), vars))
+keep <- intersect(vars, names(data))
+out  <- data[ , keep, drop = FALSE]
+out_path <- "adult24_selected.csv"
+write.csv(out, out_path, row.names = FALSE)
+
+#Generate a new csv file containing only those variables 
+cat("Saved:", out_path, "\nColumns:", paste(colnames(out), collapse=", "), "\n")
+```
+
+```{r}
+#load the new dataset
+data_selected<- read.csv("adult24_selected.csv")
+```
+
+## About the Dataset:
+
+The dataset contains 32,629 observations with 630 variables, which provides information about 2024 NHIS data on survey participants.Taken only the variables, we need and discard the other variables. The new dataset(data_selected) contains only 19 variables. The variables are as follows:
+
+-   ANXEV_A: Ever had an anxiety disorder; 1= Yes, 0=No
+-   DEPEV_A: Ever had depression; 1=Yes, 0=No
+-   MHRX_A: Took medication for other emotions, concentration, behavior, or mental health, past 12 months; 1=Yes, 0=No
+-   MHTHRPY_A: Received counseling or therapy from mental health professional, past 12 months; 1=Yes, 0=No
+-   MHTPYNOW_A: Currently receiving counseling or therapy from mental health professional, past 12 months; 1=Yes, O=No
+-   SAD_A: How often felt so sad nothing cheers you up, past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   NERVOUS_A: How often felt nervous, past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   RESTLESS_A: How often felt restless past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   HOPELESS_A: How often felt hopeless, past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   EFFORT_A: How often felt everything was an effort, past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   WORTHLESS_A: How often felt worthless, past 30 days; 1=All of the time, 2=Most of the time, 3=Some of the time, 4=A little of the time, 5=None of the time 
+-   FGEFRQTRD_A: How often tired, past 3 months; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPHOURS_A: Hours of sleep in a 24-hour period
+-   SLPREST_A: Wake up well rested, past 30 days; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPFLL_A: Trouble falling asleep, past 30 days; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPSTY_A: Trouble staying asleep, past 30 days; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPMED1_A: Take prescribed medication for sleep; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPMED2_A: Take OTC medication for sleep; 1=Never, 2=Some days, 3=Most days, 4=Every day
+-   SLPMED3_A: Take MJ/CBD for sleep. past 30 days; 1=Never, 2=Some days, 3=Most days, 4=Every day
+
+## Data Cleaning:
+
+Respondent in the survey could provide answers that are unrelated to our research proposal and thus data cleaning is necessary. Variable names should be renamed for better reference in the later. Regrouping variables and eliminating missing values are sometimes needed. The code chunk below demonstrates how the dataset is cleaned.
+
+```{r}
+# Rename the variable columns 
+data_selected <- data_selected %>%
+  rename(
+    anxiety_ever       = "ANXEV_A",
+    depression_ever       = "DEPEV_A",
+    medication_past12     = "MHRX_A",
+    therapy_past12 = "MHTHRPY_A",
+    therapy_now = "MHTPYNOW_A",
+    sad_30d        = "SAD_A",
+    nervous_30d    = "NERVOUS_A",
+    restless_30d   = "RESTLESS_A",
+    hopeless_30d   = "HOPELESS_A",
+    effort_30d     = "EFFORT_A",
+    worthless_30d  = "WORTHLESS_A",
+    fatigue = "FGEFRQTRD_A",
+    sleep_hours    = "SLPHOURS_A",
+    well_rested    = "SLPREST_A",
+    trouble_fall_asleep    = "SLPFLL_A",
+    trouble_stay_asleep     ="SLPSTY_A",
+    prescribe_med_sleep = "SLPMED1_A",
+    otc_med_sleep  = "SLPMED2_A",
+    mj_sleep   = "SLPMED3_A"
+  )
+```
+
+```{r}
+#inspect the summary statistics of the dataset 
+summary(data_selected)
+```
+
+```{r}
+#Convert responses with 7, 8, 9 97, 98, 99, 997, 998, 999 to NA
+na_codes <- c(7,8,9, 97,98,99, 997,998,999)
+data_selected <- data_selected %>%
+  mutate(across(-sleep_hours, ~na_if(., 7))) %>%
+  mutate(across(-sleep_hours, ~na_if(., 8))) %>%
+  mutate(across(-sleep_hours, ~na_if(., 9))) %>%
+  mutate(across(everything(), ~na_if(., 97))) %>%
+  mutate(across(everything(), ~na_if(., 98))) %>%
+  mutate(across(everything(), ~na_if(., 99))) %>%
+  mutate(across(everything(), ~na_if(., 997))) %>%
+  mutate(across(everything(), ~na_if(., 998))) %>%
+  mutate(across(everything(), ~na_if(., 999)))
+```
+
+```{r}
+# convert responses with out of range number of sleep hours to NA
+if ("sleep_hours" %in% names(data_selected)) {
+  data_selected <- data_selected %>%
+    mutate(sleep_hours = ifelse(sleep_hours >= 0 & sleep_hours <= 24, sleep_hours, NA_real_))
+}
+```
+
+```{r}
+#regroup those variables to 1(Yes), 0(No)
+bin_vars <- c(
+  "anxiety_ever","depression_ever","medication_past12","therapy_past12","therapy_now")
+data_selected <- data_selected %>%
+  mutate(across(all_of(bin_vars),
+                ~ case_when(. == 1 ~ 1L,
+                            . == 2 ~ 0L,
+                            TRUE ~ as.integer(NA)),
+                .names = "{.col}"))
+```
+
+```{r}
+summary(data_selected)
+```
+
+```{r}
+#recode emotion variables with readable categories 
+emotion_vars <- c("sad_30d","nervous_30d","restless_30d",
+             "hopeless_30d","effort_30d","worthless_30d")
+emotion_labels <- c("All of the time",
+               "Most of the time",
+               "Some of the time",
+               "A little of the time",
+               "None of the time")
+data_selected <- data_selected %>%
+  mutate(
+    across(all_of(emotion_vars), ~ {
+      x <- suppressWarnings(as.numeric(as.character(.)))   
+      factor(x, levels = 1:5, labels = emotion_labels, ordered = TRUE)
+    }))
+```
+
+```{r}
+table(data_selected$sad_30d)
+```
+
+```{r}
+#recode sleep variables with readable categories 
+sleep_vars<-c("well_rested","trouble_fall_asleep","trouble_stay_asleep", "fatigue",
+              "prescribe_med_sleep","otc_med_sleep","mj_sleep")
+sleep_labels<-c("Never", "Some days", "Most days", "Every day")
+data_selected <- data_selected %>%
+  mutate(
+    across(all_of(sleep_vars), ~ {
+      x <- suppressWarnings(as.numeric(as.character(.)))   
+      factor(x, levels = 1:4, labels = sleep_labels, ordered = TRUE)
+    }))
+```
+
+```{r}
+table(data_selected$well_rested)
+```
+
+
+19 variables have been cleaned and recorded.The summary statistics of uncleaned variables suggest that some variables responses with special missing values. For example, the variable anxiety_ever have a max 9, which should be considered as an NA. In addition, sleep_hours columns have a max 99, which is impossible given only 24 hours range. Therefore, we need to set those out of range numbers to NA. After cleaning the variables and regroup variables into Yes(1) and No(0), the summary statistics do not show out of bound values and special missing values. Other than missing values, sleep variables and emotion variables are all recoded into readable categories, ranked from always to rarely/none of the time. The recoded labels could create a better understanding of the relationship between variables in the data visualization section.
+
+## Data Distributions:
+Below, we will examine the distributions of each of the variables we have selected from the NHIS survey. We split up the variables into two categories, sleep and mental-health related, as we will ultimately choose variables from the respective categories to examine correlations. We utilized histograms for numerical variables and bar charts for categorical variables. Some variables were also combined into groups for better understanding of how the frequency is distributed across the survey respondents.
+
+### Sleep-Related Variables
+#### sleep_hours
+```{r}
+ggplot(data_selected, aes(x = sleep_hours)) +
+  geom_histogram(binwidth = 0.5) +
+  scale_x_continuous(breaks = seq(0, 24, by = 1)) +
+  labs(x = "Hours of sleep per day", y = "Number of respondents",
+       title = "Distribution of reported sleep duration in a day") +
+  theme_minimal()
+```
+
+Most respondants reported 7-8 hours slept in a 24-hour period. 
+
+#### well_rested
+```{r}
+ggplot(data_selected, aes(x = well_rested)) +
+  geom_bar() +
+  labs(x = "Frequency of feeling well rested", y = "Number of respondents",
+       title = "Distribution of waking of well rested") +
+  theme_minimal()
+```
+
+Most respondants woke up feeling well rested on most days within the past 30 days.
+
+#### fatigue
+```{r}
+ggplot(data_selected, aes(x = fatigue)) +
+  geom_bar() +
+  labs(x = "Frequency of feeling tired or exhausted", y = "Number of respondents",
+       title = "Distribution of feeling fatigued in past 3 months") +
+  theme_minimal()
+```
+
+Most respondants reported feeling tired or exhausted on some days in the past 30 days.
+
+#### trouble_fall_asleep & trouble_stay_asleep
+```{r}
+data_selected %>%
+  select(trouble_fall_asleep, trouble_stay_asleep) %>%
+  pivot_longer(cols = c(trouble_fall_asleep, trouble_stay_asleep),
+               names_to = "Sleep_Issue",
+               values_to = "Frequency") %>%
+  mutate(Frequency = factor(Frequency),
+         Sleep_Issue = factor(Sleep_Issue,
+                              labels = c("Trouble Falling Asleep", "Trouble Staying Asleep"))) %>%
+  ggplot(aes(x = Frequency, fill = Sleep_Issue)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Frequency of sleep difficulty",
+       y = "Number of respondents",
+       fill = "Type of Sleep Difficulty",
+       title = "Distribution of having trouble falling vs. staying asleep") +
+  theme_minimal()
+```
+
+Most respondants reported rarely experiencing having trouble falling or staying asleep during the past 30 days. 
+
+#### sleep_med_vars = prescribe_med_sleep, otc_med_sleep, mj_sleep
+```{r}
+sleep_med_vars <- c("prescribe_med_sleep", "otc_med_sleep", "mj_sleep")
+data_selected %>%
+  select(sleep_med_vars) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Medication",
+               values_to = "Response") %>%
+  mutate(Medication = factor(Medication, 
+                      levels = c(sleep_med_vars),
+                      labels = c("Prescription","Over-the-Counter","Marijuana/CBD")),
+    Response = factor(Response,
+                      levels = rev(sleep_labels),
+                      labels = rev(sleep_labels))) %>%
+ggplot(aes(x = Medication, fill = Response)) +
+  geom_bar(position = "fill") +
+  coord_flip() +
+  scale_fill_hue(na.value = "gray") +
+  labs(y = "Proportion of respondents",
+    fill = "Response",
+    title = "Distribution of respondents taking different types of medication for sleep") +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+While the minority of respondents take sleep medication at least some days in the past 30 days, over-the-counter medications are the most popular but people that do take it only take it somedays. When it comes to prescription sleep medications, respondents tended to use them every day.
+
+### Mental Health Variables
+#### anxiety_ever & depression_ever 
+```{r}
+# Creating a variable that combines depression & anxiety variables
+data_selected <- data_selected %>%
+  mutate(mh_group = case_when(
+      depression_ever == 1 & anxiety_ever == 1 ~ "Both",
+      depression_ever == 1 & anxiety_ever == 0 ~ "Depression only",
+      depression_ever == 0 & anxiety_ever == 1 ~ "Anxiety only",
+      depression_ever == 0 & anxiety_ever == 0 ~ "Neither",
+      TRUE ~ NA_character_
+    )
+  )
+table(data_selected$mh_group)
+
+ggplot(data_selected, aes(x = factor(mh_group,
+    levels = c("Both","Anxiety only","Depression only","Neither")))) +
+  geom_bar() +
+  labs(x = "Presence of anxiety disorder and/or depression", y = "Number of respondents",
+       title = "Distribution of anxiety disorder and/or depression") +
+  theme_minimal()
+```
+
+Most respondents surveyed never had an anxiety disorder or depression. However, among those that did, more respondents reported having both compared to one or the other.
+
+#### emotion_vars = sad_30d, nervous_30d, restless_30d, hopeless_30d, effort_30d, worthless_30d
+```{r}
+data_selected %>%
+  select(emotion_vars) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Emotion",
+               values_to = "Response") %>%
+  mutate(Emotion = factor(Emotion, 
+                      levels = c(emotion_vars),
+                      labels = c("Sad","Nervous","Restless","Hopeless","Everything an effort","Worthless")),
+    Response = factor(Response,
+                      levels = c(emotion_labels),
+                      labels = c(emotion_labels))) %>%
+ggplot(aes(x = Emotion, fill = Response)) +
+  geom_bar(position = "fill") +
+  coord_flip() +
+  scale_fill_hue(na.value = "gray") +
+  labs(y = "Proportion of respondents",
+    fill = "Response",
+    title = "Distribution of respondents experiencing serious psychological distress") +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+Most respondents reported never experiencing any of the emotions used to measure serious psychological distress. Of those that did at least occasionally, feeling nervous and restless were the most common.
+
+#### medication_past12 & therapy_past12
+```{r}
+data_selected <- data_selected %>%
+  mutate(mh_treatment = case_when(
+      medication_past12 == 1 & therapy_past12 == 1 ~ "Both",
+      medication_past12 == 1 & therapy_past12 == 0 ~ "Medication only",
+      medication_past12 == 0 & therapy_past12 == 1 ~ "Therapy only",
+      medication_past12 == 0 & therapy_past12 == 0 ~ "Neither",
+      TRUE ~ NA_character_
+    )
+  )
+table(data_selected$mh_treatment)
+
+ggplot(data_selected, aes(x = factor(mh_treatment,
+    levels = c("Both","Medication only","Therapy only","Neither")))) +
+  geom_bar() +
+  labs(x = "Usage of medication and/or therapy", y = "Number of respondents",
+       title = "Distribution of medication and/or therapy usage") +
+  theme_minimal()
+```
+
+Most respondents surveyed did not take medication or use therapy for mental health reasons. However, if they did, therapy or counseling was the most prevalent form of mental health care.
+
+#### therapy_now
+```{r}
+data_selected %>%
+  mutate(
+    therapy_now = factor(therapy_now,
+                         levels = c(1, 0),
+                         labels = c("Receiving therapy", "Not receiving therapy")),
+    mh_group = factor(mh_group,
+                      levels = c("Both", 
+                                 "Depression only", 
+                                 "Anxiety only", 
+                                 "Neither"))
+  ) %>%
+  group_by(mh_group, therapy_now) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(mh_group) %>%
+  mutate(prop = n / sum(n)) %>%
+  ggplot(aes(x = mh_group, y = prop, fill = therapy_now)) +
+  geom_col(position = "dodge") +
+  labs(
+    x = "Mental health group",
+    y = "Proportion of respondents",
+    fill = "Current therapy status",
+    title = "Respondents receiving therapy by mental health group"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+
+In all mental health groups, a greater number of respondents are receiving therapy. Out of all group, the largest proportion of respondents are currently receiving therapy in those that have both depression and anxiety.
+
+## Data Analysis:
+### Does the average hours slept for those with anxiety and/or depression differ from those without?
+```{r}
+# Overall distribution of hours slept
+ggplot(data_selected, aes(x = mh_group, y = sleep_hours, fill = mh_group)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  labs(
+    title = "Hours slept by mental health group",
+    x = "Mental health group",
+    y = "Hours slept") +
+  theme_minimal() 
+
+# Looking closer at the mean hours for each group
+data_selected %>%
+  group_by(mh_group) %>%
+  summarise(avg_sleep = mean(sleep_hours, na.rm = TRUE), sd_sleep = sd(sleep_hours, na.rm = TRUE), n = n()) %>%
+  ggplot(aes(x = mh_group, y = avg_sleep, ymin = avg_sleep - sd_sleep, ymax = avg_sleep + sd_sleep)) +
+    geom_col(fill = "lightblue") +
+    geom_errorbar(width = 0.2) +
+    labs(x = "Mental health disorder", y = "Mean hours of sleep",
+         title = "Average sleep by prevalence of anxiety and depression") +
+  theme_minimal()
+
+# ANOVA test to determine if there is a significant difference in means
+anova_result <- aov(sleep_hours ~ mh_group, data = data_selected)
+summary(anova_result)
+
+# Post hoc test to evaluate which differences are significant
+TukeyHSD(anova_result)
+```
+
+After running a one-way ANOVA, we found a p-value of 8.21e-07 (p < 0.05) which suggests a statistically significant difference in the average hours of sleep among at least one pair of mental health groups. We followed this with a post hoc test and found 3 relationships: people with both depression and anxiety sleep less than those with anxiety only, people with depression only sleep more than those with both depression and anxiety, people with neither condition sleep more than those with both depression and anxiety.
+
+### Does experiencing sleep troubles relate to whether or not an individual receives mental health-related treatments?
+```{r}
+data_selected %>%
+  mutate(trouble_fall_asleep = factor(trouble_fall_asleep,
+                                      levels = c("Never", "Some days", "Most days", "Every day"),
+                                      ordered = TRUE),
+         trouble_stay_asleep = factor(trouble_stay_asleep,
+                                      levels = c("Never", "Some days", "Most days", "Every day"),
+                                      ordered = TRUE)) %>% 
+  select(mh_treatment, trouble_fall_asleep, trouble_stay_asleep) %>%
+  pivot_longer(cols = c(trouble_fall_asleep, trouble_stay_asleep),
+               names_to = "trouble_type",
+               values_to = "trouble_response") %>% 
+ggplot(aes(x = mh_treatment, y = as.numeric(trouble_response), fill = trouble_type)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = c("Never", "Some days", "Most days", "Every day")) +
+  labs(title = "Sleep Trouble Severity by Mental Health Treatment Type",
+       x = "Mental Health Treatment Type",
+       y = "Frequency of Sleep Trouble",
+       fill = "Sleep Trouble Type") +
+  theme_minimal()
+```
+
+There appears to be variation in how often respondents experienced trouble falling or staying asleep based on whether or not they received a form of mental health treatment. We were interested in investigating mental health treatment since reliance on treatment could indicate either more severe mental health outcomes or improved mental health as a result.
+
+### Preliminary correlations between sleep and mental health
+```{r}
+# Categorize variables
+sleep_vars <- c("sleep_hours","well_rested",
+                "trouble_fall_asleep","trouble_stay_asleep",
+                "prescribe_med_sleep","otc_med_sleep","mj_sleep",
+                "fatigue")
+mh_vars <- c("anxiety_ever","depression_ever",
+             "medication_past12","therapy_past12","therapy_now",
+             "sad_30d","nervous_30d","restless_30d","hopeless_30d","effort_30d","worthless_30d")
+
+# Convert all observations to numeric variables
+data_corr <- data_selected %>%
+  select(all_of(c(sleep_vars, mh_vars))) %>%
+  mutate(across(everything(), as.numeric))
+
+# Compute correlations 
+# pairwise.complete.obs utilizes all observation pairs when both are non-missing values
+cor_matrix <- cor(data_corr[, mh_vars],
+                  data_corr[, sleep_vars],
+                  use = "pairwise.complete.obs",
+                  method = "spearman")
+
+# Visualize correlation matrix in ggcorplot with correlation coefficients
+library(ggcorrplot)
+ggcorrplot(cor_matrix, lab = TRUE,
+           title = "Correlations Between Sleep and Mental Health Variables")
+```
+
+Because many of the sleep and mental health variables in this dataset are ordinal, skewed, or contain outliers, the Spearman correlation was the most appropriate measure of association. The heatmap was visualized using the ggcorrplot package, which provides a flexible way to display correlation matrices with intuitive color gradients and optional numeric labels for each cell. It is also important to note the direction in which our variables are numbered in relation to better or worse sleep/mental health outcomes -- the psychological distress variables have been numbered to decrease with "severity" so the correlations are actually reversed.
+
+Since the anxiety, depression, medication, and therapy variables were all binary, it is difficult to draw conclusions using this correlation matrix. However, there are some patterns to note between sleep patterns and psychological distress variables.
+The correlation matrix reveals fatigue shows the strongest and most consistent negative correlations with mental health symptoms, particularly sadness, nervousness, hopelessness, and feelings of worthlessness, suggesting that greater fatigue is tied to worse emotional functioning. Variables indicating difficulty falling or staying asleep also display negative associations with these particular emotions, reinforcing a link between sleep disturbance and psychological distress. In contrast, feeling well rested is positviely associated with nearly all mental health indicators, meaning that feeling more well rested relates to fewer mental health symptoms. Notably, total sleep hours has only very small correlations with mental health outcomes, suggesting that sleep quality may be more important than quantity in this sample.
+
+## Conclusion:
+Our exploratory data analysis of the 2024 NHIS adult survey reveals patterns in how sleep behaviors may affect mental-health indicators that we can further investigate. From the distributional summaries, most respondents reported relatively healthy sleep habits of sleeping 7–8 hours per night, waking well rested most days, and experiencing sleep troubles only occasionally. Likewise, the majority did not report ever having anxiety or depression, and most psychological distress measures were skewed toward the least severe categories. However, among those who reported mental-health conditions or more frequent distress symptoms, sleep difficulties were consistently more common.
+
+When comparing average sleep hours across mental-health groups, we found statistically significant differences where respondents with both anxiety and depression slept the least, while those with neither condition slept the most. While this aligns with our expectation that sleep does affect mental health outcomes, the differences were minimal, suggesting that sleep duration alone may not fully capture sleep-related challenges faced by individuals with mental-health concerns.
+
+Sleep quality indicators such as trouble falling asleep and trouble staying asleep also revealed potential ties to mental health treatment patterns. Respondents receiving forms of mental-health treatment (notably medication or both therapy and medication) tended to report more frequent experiences with sleep trouble, reinforcing the idea that sleep disruption may be relevant to one's mental health symptoms.
+
+The preliminary Spearman correlations further highlighted that sleep quality, not sleep quantity, had the most meaningful associations with psychological distress. Specifically, total sleep hours exhibited only minimal correlations with emotional symptoms or mental health history, suggesting that how well people sleep matters more than how long they sleep in this dataset.
+
+Overall, the data distributions and analyses seem to agree that sleep disturbances and fatigue are tied to poorer mental health outcomes, whereas sufficient rest aligns with better emotional functioning. Further analyses should be done to evaluate whether these patterns are statistically significant to further solidify the relationship between sleep and mental health. We can also more closely investigate the variables with higher correlations from our matrix.
