@@ -27,7 +27,7 @@ We're downloading the tidyverse package which contains packages such as dplyr an
 
 ```{r}
 #load the original dataset
-data<- read.csv("/Users/apple/Desktop/adult24/adult24.csv")
+data<- read.csv("Data/adult24.csv")
 dim(data)
 ```
 
@@ -62,7 +62,7 @@ We then only extracted 19 variables that measure emotion, sleep, and treatment u
 
 ```{r}
 #load the new dataset
-adult_selected<- read.csv("/Users/apple/Library/Containers/com.microsoft.Outlook/Data/tmp/Outlook Temp/adult_selected.csv")
+adult_selected<- read.csv("Data/adult_selected.csv")
 ```
 
 ## About the Dataset/Main Variables:
@@ -449,7 +449,9 @@ ggplot(
   )+
   theme_minimal()
 ```
+
 ### Scatter Plot of Association between psychological distress over sleep duration
+
 ```{r}
 #scatter plot of sleep duration over distress score
 ggplot(adult_selected, aes(x = sleep_hours, y = distress_score)) +
@@ -481,6 +483,7 @@ model_distress <- lm(distress_score ~ sleep_hours + well_rested + fatigue + age,
                      data = adult_selected)
 summary(model_distress)
 ```
+
 The p-value for sleep hours is greater than 0.05, which is not statistically significant. This indicates that sleeping less or more does not change distress. The P-value for fatigue and well-rested are less than 0.05, which suggest that they are statistically significant. There is a strong negative association between well-rested and psychological distress: more often felt well-rested, less distress. There is a strong positive association between fatigue and psychological distress: more fatigue, more distress.The $R^2$=0.26 symbolizes that the model explains 26% of the variance in distress. 
 
 ### Mental Health Status Across Levels of Sleep Difficulty
@@ -519,6 +522,7 @@ adult_selected %>%
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
+
 When respondents never have trouble falling asleep and staying asleep, they report themselves have no mental health disorders. As the sleep problem aggravates, the proportion of people who report neither decreases and the proportion of people who report both increases. This indicates that people who struggle with sleep problems are more likely to have both anxiety and depression. 
 
 ### Preliminary correlations between sleep and mental health
@@ -550,9 +554,10 @@ library(ggcorrplot)
 ggcorrplot(cor_matrix, lab = TRUE,
            title = "Correlations Between Sleep and Mental Health Variables")
 ```
-The quantity of sleep may not be fully representative of whether someone receives good sleep, we created a correlation matrix that mapped other variables indicative of sleep quality.Because many of the sleep and mental health variables in this dataset are ordinal, skewed, or contain outliers, the Spearman correlation was the most appropriate measure of association.The heatmap was visualized using the ggcorrplot package, which provides a flexible way to display correlation matrices with intuitive color gradients and optional numeric labels for each cell. It is also important to note the direction in which our variables are numbered in relation to better or worse sleep/mental health outcomes -- the psychological distress variables have been numbered to decrease with "severity" so the correlations are actually reversed.
 
-Since the anxiety, depression, medication, and therapy variables were all binary, it is difficult to draw conclusions using this correlation matrix. However, there are some patterns to note between sleep patterns and psychological distress variables. The correlation matrix reveals fatigue shows the strongest and most consistent negative correlations with mental health symptoms, particularly sadness, nervousness, hopelessness, and feelings of worthlessness, suggesting that greater fatigue is tied to worse emotional functioning. Variables indicating difficulty falling or staying asleep also display negative associations with these particular emotions, reinforcing a link between sleep disturbance and psychological distress. In contrast, feeling well rested is positively associated with nearly all mental health indicators, meaning that feeling more well rested relates to fewer mental health symptoms. Notably, total sleep hours has only very small correlations with mental health outcomes, suggesting that sleep quality may be more important than quantity in this sample.
+The quantity of sleep may not be fully representative of whether someone receives good sleep, we created a correlation matrix that mapped other variables indicative of sleep quality. Because many of the sleep and mental health variables in this dataset are ordinal, skewed, or contain outliers, the Spearman correlation was the most appropriate measure of association. The heatmap was visualized using the ggcorrplot package, which provides a flexible way to display correlation matrices with intuitive color gradients and optional numeric labels for each cell. It is also important to note the direction in which our variables are numbered in relation to better or worse sleep/mental health outcomes so the psychological distress variables have been numbered to increase with "severity".
+
+Since the anxiety, depression, medication, and therapy variables were all binary, it is difficult to draw conclusions using this correlation matrix. However, there are some patterns to note between sleep patterns and psychological distress variables. The correlation matrix reveals fatigue shows the strongest and most consistent positive correlations with mental health symptoms, particularly sadness, nervousness, hopelessness, and feelings of worthlessness, suggesting that greater fatigue is tied to worse emotional functioning. Variables indicating difficulty falling or staying asleep also display positive associations with these particular emotions, reinforcing a link between sleep disturbance and psychological distress. In contrast, feeling well rested is negatively associated with nearly all mental health indicators, meaning that feeling more well rested relates to fewer mental health symptoms. Notably, total sleep hours has only very small correlations with mental health outcomes, suggesting that sleep quality may be more important than quantity in this sample.
 
 ## Conclusion:
 
