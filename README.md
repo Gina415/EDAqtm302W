@@ -56,39 +56,19 @@ We were interested in investigating whether sleep duration and sleep quality are
 
 ## Getting Started
 1. Clone this repository.
-2. Raw data is being kept [here](Repo folder containing raw data) within this repo.
-3. Data processing/transformation scripts are being kept [here](Repo folder containing data processing scripts/notebooks)
-4. etc...
-5. Follow setup [instructions](Link to file)
-Data:
-Raw health dataset is stored in:
-
-/data/raw/
-
-
-Processed adult-filtered dataset is in:
-
-/data/processed/
-
-
-Scripts / Notebooks:
-EDA notebook and data-cleaning scripts are in:
-
-/notebooks/
-
-
-Environment Setup (if applicable):
-Install required packages:
-
-pip install -r requirements.txt
-
-
-Open the main EDA notebook:
+2. Raw data is being kept in ./EDAqtm302W/data/adult24.csv within this repository
+3. Processed data is kept in ./EDAqtm302W/data/adult_selected.csv
+4. Data processing and main code notebook scripts are being kept in ./EDAqtm302W/
+5. Install required packages
 
 ## Directory Structure
-* [Notebook/Markdown/Slide Deck Title](link)
-* [Notebook/Markdown/Slide DeckTitle](link)
-* [Blog Post](link)
+.
+└── EDAqtm302W/
+    ├── Data/
+    │   ├── adult24.csv
+    │   └── adult_selected.csv
+    ├── new_EDA_Project.Rmd
+    └── README.md
 
 ## Contact
 **Christina Fu (christina.fu@emory.edu)**
